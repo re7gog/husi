@@ -16,6 +16,8 @@ import io.nekohasekai.sagernet.database.ProxyEntity
 import io.nekohasekai.sagernet.database.ProxyEntity.Companion.TYPE_CONFIG
 import io.nekohasekai.sagernet.database.SagerDatabase
 import io.nekohasekai.sagernet.fmt.ConfigBuildResult.IndexEntity
+import io.nekohasekai.sagernet.fmt.direct.DirectBean
+import io.nekohasekai.sagernet.fmt.direct.buildSingBoxOutboundDirectBean
 import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean
 import io.nekohasekai.sagernet.fmt.hysteria.buildSingBoxOutboundHysteriaBean
 import io.nekohasekai.sagernet.fmt.internal.ChainBean
@@ -443,8 +445,7 @@ fun buildConfig(
                     }.asMap()
                 } else { // internal outbound
                     currentOutbound = when (bean) {
-                        is ConfigBean ->
-                            gson.fromJson(bean.config, currentOutbound.javaClass)
+                        is ConfigBean -> gson.fromJson(bean.config, currentOutbound.javaClass)
 
                         is ShadowTLSBean -> // before StandardV2RayBean
                             buildSingBoxOutboundShadowTLSBean(bean).asMap()
@@ -452,23 +453,19 @@ fun buildConfig(
                         is StandardV2RayBean -> // http/trojan/vmess/vless
                             buildSingBoxOutboundStandardV2RayBean(bean).asMap()
 
-                        is HysteriaBean ->
-                            buildSingBoxOutboundHysteriaBean(bean)
+                        is HysteriaBean -> buildSingBoxOutboundHysteriaBean(bean)
 
-                        is TuicBean ->
-                            buildSingBoxOutboundTuicBean(bean).asMap()
+                        is TuicBean -> buildSingBoxOutboundTuicBean(bean).asMap()
 
-                        is SOCKSBean ->
-                            buildSingBoxOutboundSocksBean(bean).asMap()
+                        is SOCKSBean -> buildSingBoxOutboundSocksBean(bean).asMap()
 
-                        is ShadowsocksBean ->
-                            buildSingBoxOutboundShadowsocksBean(bean).asMap()
+                        is ShadowsocksBean -> buildSingBoxOutboundShadowsocksBean(bean).asMap()
 
-                        is WireGuardBean ->
-                            buildSingBoxOutboundWireGuardBean(bean).asMap()
+                        is WireGuardBean -> buildSingBoxOutboundWireGuardBean(bean).asMap()
 
-                        is SSHBean ->
-                            buildSingBoxOutboundSSHBean(bean).asMap()
+                        is SSHBean -> buildSingBoxOutboundSSHBean(bean).asMap()
+
+                        is DirectBean -> buildSingBoxOutboundDirectBean(bean).asMap()
 
                         else -> throw IllegalStateException("can't reach")
                     }

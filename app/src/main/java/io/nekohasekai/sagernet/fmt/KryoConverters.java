@@ -5,6 +5,7 @@ import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.ByteBufferInput;
 import com.esotericsoftware.kryo.io.ByteBufferOutput;
 import io.nekohasekai.sagernet.database.SubscriptionBean;
+import io.nekohasekai.sagernet.fmt.direct.DirectBean;
 import io.nekohasekai.sagernet.fmt.http.HttpBean;
 import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean;
 import io.nekohasekai.sagernet.fmt.internal.ChainBean;
@@ -131,6 +132,12 @@ public class KryoConverters {
     public static JuicityBean juicityDeserialize(byte[] bytes) {
         if (JavaUtil.isEmpty(bytes)) return null;
         return deserialize(new JuicityBean(), bytes);
+    }
+
+    @TypeConverter
+    public static DirectBean directDeserialize(byte[] bytes) {
+        if (JavaUtil.isEmpty(bytes)) return null;
+        return deserialize(new DirectBean(), bytes);
     }
 
     @TypeConverter

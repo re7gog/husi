@@ -211,6 +211,8 @@ object DataStore : OnPreferenceDataStoreChangeListener {
     var serverPassword by profileCacheStore.string(Key.SERVER_PASSWORD)
     var serverPassword1 by profileCacheStore.string(Key.SERVER_PASSWORD1)
     var serverMethod by profileCacheStore.string(Key.SERVER_METHOD)
+    var overrideAddress by profileCacheStore.string(Key.OVERRIDE_ADDRESS)
+    var overridePort by profileCacheStore.stringToInt(Key.OVERRIDE_PORT)
 
     var sharedStorage by profileCacheStore.string("sharedStorage")
 

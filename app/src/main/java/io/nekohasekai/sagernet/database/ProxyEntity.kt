@@ -17,6 +17,7 @@ import io.nekohasekai.sagernet.fmt.AbstractBean
 import io.nekohasekai.sagernet.fmt.KryoConverters
 import io.nekohasekai.sagernet.fmt.Serializable
 import io.nekohasekai.sagernet.fmt.buildConfig
+import io.nekohasekai.sagernet.fmt.direct.DirectBean
 import io.nekohasekai.sagernet.fmt.http.HttpBean
 import io.nekohasekai.sagernet.fmt.http.toUri
 import io.nekohasekai.sagernet.fmt.hysteria.HysteriaBean
@@ -48,6 +49,7 @@ import io.nekohasekai.sagernet.fmt.wireguard.WireGuardBean
 import io.nekohasekai.sagernet.ktx.app
 import io.nekohasekai.sagernet.ktx.applyDefaultValues
 import io.nekohasekai.sagernet.ui.profile.ChainSettingsActivity
+import io.nekohasekai.sagernet.ui.profile.DirectSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.HttpSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.HysteriaSettingsActivity
 import io.nekohasekai.sagernet.ui.profile.JuicitySettingsActivity
@@ -94,6 +96,7 @@ data class ProxyEntity(
     var sshBean: SSHBean? = null,
     var wgBean: WireGuardBean? = null,
     var shadowTLSBean: ShadowTLSBean? = null,
+    var directBean: DirectBean? = null,
     var chainBean: ChainBean? = null,
     var configBean: ConfigBean? = null,
 ) : Serializable() {
@@ -116,6 +119,7 @@ data class ProxyEntity(
         const val TYPE_TUIC = 20
         const val TYPE_MIERU = 21
         const val TYPE_JUICITY = 22
+        const val TYPE_DIRECT = 23
 
         const val TYPE_CONFIG = 998
 
@@ -198,6 +202,7 @@ data class ProxyEntity(
             TYPE_WG -> wgBean = KryoConverters.wireguardDeserialize(byteArray)
             TYPE_TUIC -> tuicBean = KryoConverters.tuicDeserialize(byteArray)
             TYPE_JUICITY -> juicityBean = KryoConverters.juicityDeserialize(byteArray)
+            TYPE_DIRECT -> directBean = KryoConverters.directDeserialize(byteArray)
             TYPE_SHADOWTLS -> shadowTLSBean = KryoConverters.shadowTLSDeserialize(byteArray)
             TYPE_CHAIN -> chainBean = KryoConverters.chainDeserialize(byteArray)
             TYPE_CONFIG -> configBean = KryoConverters.configDeserialize(byteArray)
@@ -218,6 +223,7 @@ data class ProxyEntity(
         TYPE_TUIC -> "TUIC"
         TYPE_JUICITY -> "Juicity"
         TYPE_SHADOWTLS -> "ShadowTLS"
+        TYPE_DIRECT -> "Direct"
         TYPE_CHAIN -> chainName
         TYPE_CONFIG -> configBean!!.displayType()
         else -> "Undefined type $type"
@@ -240,6 +246,7 @@ data class ProxyEntity(
             TYPE_WG -> wgBean
             TYPE_TUIC -> tuicBean
             TYPE_JUICITY -> juicityBean
+            TYPE_DIRECT -> directBean
             TYPE_SHADOWTLS -> shadowTLSBean
             TYPE_CHAIN -> chainBean
             TYPE_CONFIG -> configBean
@@ -250,6 +257,7 @@ data class ProxyEntity(
     fun haveLink(): Boolean {
         return when (type) {
             TYPE_CHAIN -> false
+            TYPE_DIRECT -> false
             else -> true
         }
     }
@@ -259,6 +267,7 @@ data class ProxyEntity(
             is SSHBean -> false
             is WireGuardBean -> false
             is ShadowTLSBean -> false
+            is DirectBean -> false
             is ConfigBean -> false
             else -> true
         }
@@ -358,6 +367,7 @@ data class ProxyEntity(
         wgBean = null
         tuicBean = null
         juicityBean = null
+        directBean = null
         shadowTLSBean = null
         chainBean = null
         configBean = null
@@ -423,6 +433,11 @@ data class ProxyEntity(
                 juicityBean = bean
             }
 
+            is DirectBean -> {
+                type = TYPE_DIRECT
+                directBean = bean
+            }
+
             is ShadowTLSBean -> {
                 type = TYPE_SHADOWTLS
                 shadowTLSBean = bean
@@ -458,6 +473,7 @@ data class ProxyEntity(
                 TYPE_WG -> WireGuardSettingsActivity::class.java
                 TYPE_TUIC -> TuicSettingsActivity::class.java
                 TYPE_JUICITY -> JuicitySettingsActivity::class.java
+                TYPE_DIRECT -> DirectSettingsActivity::class.java
                 TYPE_SHADOWTLS -> ShadowTLSSettingsActivity::class.java
                 TYPE_CHAIN -> ChainSettingsActivity::class.java
                 TYPE_CONFIG -> ConfigSettingActivity::class.java
