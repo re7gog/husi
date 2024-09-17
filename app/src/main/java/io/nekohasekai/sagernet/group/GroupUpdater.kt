@@ -1,6 +1,5 @@
 package io.nekohasekai.sagernet.group
 
-import io.nekohasekai.sagernet.DNSMode
 import io.nekohasekai.sagernet.IPv6Mode
 import io.nekohasekai.sagernet.Key
 import io.nekohasekai.sagernet.R
@@ -80,7 +79,7 @@ abstract class GroupUpdater {
             lookupJobs.add(GlobalScope.launch(lookupPool) {
                 try {
                     val results = if (
-                        DataStore.dnsMode == DNSMode.FAKE_DNS &&
+                        DataStore.enableFakeDns &&
                         DataStore.serviceState.started &&
                         DataStore.serviceMode == Key.MODE_VPN
                     ) {

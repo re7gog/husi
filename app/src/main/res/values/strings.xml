@@ -584,8 +584,6 @@
     <string name="enable_brutal">Enable TCP Brutal congestion controller</string>
     <string name="dns_mode">DNS mode</string>
     <string name="fake_dns" translatable="false">Fake DNS</string>
-    <string name="dns_mode_leak">Precise query with leak</string>
-    <string name="dns_mode_precise">Precise query with low speed</string>
     <string name="blurred_address">Make the server address blurred</string>
     <string name="action_flash_on">Turn on flash</string>
     <string name="action_camera_switch">Switch camera</string>

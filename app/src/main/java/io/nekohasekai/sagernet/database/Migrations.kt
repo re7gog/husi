@@ -10,8 +10,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @DeleteColumn.Entries(
     DeleteColumn(
         tableName = "proxy_entities",
-        columnName = "nekoBean"
-    )
+        columnName = "nekoBean",
+    ),
 )
 class SagerDatabase_Migration_2_3 : AutoMigrationSpec
 
@@ -30,7 +30,11 @@ object SagerDatabase_Migration_4_5 : Migration(4, 5) {
 @DeleteColumn.Entries(
     DeleteColumn(
         tableName = "proxy_entities",
-        columnName = "trojanGoBean"
-    )
+        columnName = "trojanGoBean",
+    ),
+    DeleteColumn(
+        tableName = "rules",
+        columnName = "ruleSet",
+    ),
 )
 class SagerDatabase_Migration_5_6 : AutoMigrationSpec

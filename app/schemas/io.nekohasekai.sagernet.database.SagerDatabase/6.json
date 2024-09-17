@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 6,
-    "identityHash": "deffddafbfc4403c1d6eae2760f8033c",
+    "identityHash": "808ad5787a16616d3bf713886548d971",
     "entities": [
       {
         "tableName": "proxy_groups",
@@ -260,7 +260,7 @@
       },
       {
         "tableName": "rules",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `userOrder` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `ruleSet` TEXT NOT NULL, `domains` TEXT NOT NULL, `ip` TEXT NOT NULL, `port` TEXT NOT NULL, `sourcePort` TEXT NOT NULL, `network` TEXT NOT NULL, `source` TEXT NOT NULL, `protocol` TEXT NOT NULL, `outbound` INTEGER NOT NULL, `packages` TEXT NOT NULL, `ssid` TEXT NOT NULL, `bssid` TEXT NOT NULL, `clientType` TEXT NOT NULL DEFAULT '', `clashMode` TEXT NOT NULL DEFAULT '')",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `userOrder` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `domains` TEXT NOT NULL, `ip` TEXT NOT NULL, `port` TEXT NOT NULL, `sourcePort` TEXT NOT NULL, `network` TEXT NOT NULL, `source` TEXT NOT NULL, `protocol` TEXT NOT NULL, `outbound` INTEGER NOT NULL, `packages` TEXT NOT NULL, `ssid` TEXT NOT NULL, `bssid` TEXT NOT NULL, `clientType` TEXT NOT NULL DEFAULT '', `clashMode` TEXT NOT NULL DEFAULT '')",
         "fields": [
           {
             "fieldPath": "id",
@@ -284,12 +284,6 @@
             "fieldPath": "enabled",
             "columnName": "enabled",
             "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "ruleSet",
-            "columnName": "ruleSet",
-            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -386,7 +380,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'deffddafbfc4403c1d6eae2760f8033c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '808ad5787a16616d3bf713886548d971')"
     ]
   }
 }
