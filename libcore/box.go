@@ -2,7 +2,8 @@ package libcore
 
 import (
 	"context"
-	"io"
+	"net/netip"
+	"os"
 	"time"
 
 	box "github.com/sagernet/sing-box"
@@ -13,14 +14,18 @@ import (
 	_ "github.com/sagernet/sing-box/include"
 	"github.com/sagernet/sing-box/log"
 	"github.com/sagernet/sing-box/outbound"
+	"github.com/sagernet/sing/common"
 	"github.com/sagernet/sing/common/atomic"
 	E "github.com/sagernet/sing/common/exceptions"
 	F "github.com/sagernet/sing/common/format"
 	"github.com/sagernet/sing/service"
 	"github.com/sagernet/sing/service/pause"
 
+	"libcore/anchor"
 	"libcore/protect"
 	"libcore/v2rayapilite"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 func ResetAllConnections() {
@@ -39,13 +44,14 @@ const (
 
 type BoxInstance struct {
 	*box.Box
+	cancel  context.CancelFunc
+	state   atomic.TypedValue[boxState]
+	forTest bool
 
-	cancel context.CancelFunc
+	// closers are libcore extra services' closers.
+	closers []any
 
-	state atomic.TypedValue[boxState]
-
-	protectFun    protect.Protect
-	protectCloser io.Closer
+	protectFun protect.Protect
 
 	selector         *outbound.Selector
 	selectorCallback selectorCallback
@@ -99,8 +105,9 @@ func NewBoxInstance(config string, platformInterface PlatformInterface) (b *BoxI
 	}
 
 	b = &BoxInstance{
-		Box:    instance,
-		cancel: cancel,
+		Box:     instance,
+		cancel:  cancel,
+		forTest: forTest,
 		protectFun: func(fd int) error {
 			return platformInterface.AutoDetectInterfaceControl(int32(fd))
 		},
@@ -120,6 +127,40 @@ func NewBoxInstance(config string, platformInterface PlatformInterface) (b *BoxI
 		if clash := b.Box.Router().ClashServer(); clash != nil {
 			b.clashModeCallback = platformInterface.ClashModeCallback
 		}
+
+		var anchorOptions anchor.Options
+		for _, inbound := range options.Inbounds {
+			switch inbound.Type {
+			case C.TypeMixed:
+				listen := (*netip.Addr)(inbound.MixedOptions.Listen)
+				if !listen.IsUnspecified() {
+					continue
+				}
+				anchorOptions.SocksPort = inbound.MixedOptions.ListenPort
+				users := inbound.MixedOptions.Users
+				if len(users) > 0 {
+					anchorOptions.User = users[0]
+				}
+			case C.TypeDirect:
+				if inbound.Tag != "dns-in" {
+					continue
+				}
+				anchorOptions.DnsPort = inbound.DirectOptions.OverridePort
+			}
+		}
+		if anchorOptions.SocksPort > 0 && anchorOptions.DnsPort > 0 {
+			if host, err := os.Hostname(); err == nil {
+				anchorOptions.DeviceName = host
+			} else if uuidV1, err := uuid.NewV1(); err == nil {
+				anchorOptions.DeviceName = uuidV1.String()
+			} else {
+				anchorOptions.DeviceName = C.Version
+			}
+			anchorService, err := anchor.New(log.StdLogger(), anchorOptions)
+			if err == nil {
+				b.closers = append(b.closers, anchorService)
+			}
+		}
 	}
 
 	return b, nil
@@ -138,14 +179,30 @@ func (b *BoxInstance) Start() (err error) {
 		return err
 	}
 
-	if b.selector != nil {
-		oldCancel := b.cancel
-		ctx, cancel := context.WithCancel(context.Background())
-		b.cancel = func() {
-			oldCancel()
-			cancel()
+	if !b.forTest {
+		if b.selector != nil {
+			oldCancel := b.cancel
+			ctx, cancel := context.WithCancel(context.Background())
+			b.cancel = func() {
+				oldCancel()
+				cancel()
+			}
+			go b.listenSelectorChange(ctx, b.selectorCallback)
 		}
-		go b.listenSelectorChange(ctx, b.selectorCallback)
+
+		anchorService := common.Find(b.closers, func(it any) bool {
+			if it == nil {
+				return false
+			}
+			_, isAnchor := it.(*anchor.Anchor)
+			return isAnchor
+		})
+		if anchorService != nil {
+			_ = anchorService.(*anchor.Anchor).Start()
+		}
+		if closer := protect.ServerProtect(ProtectPath, b.protectFun); closer != nil {
+			b.closers = append(b.closers, closer)
+		}
 	}
 
 	return nil
@@ -163,9 +220,7 @@ func (b *BoxInstance) CloseTimeout(timeout time.Duration) (err error) {
 		return nil
 	}
 
-	if b.protectCloser != nil {
-		_ = b.protectCloser.Close()
-	}
+	_ = common.Close(b.closers...)
 	if b.clashModeHook != nil {
 		select {
 		case <-b.clashModeHook:
@@ -200,11 +255,6 @@ func (b *BoxInstance) NeedWIFIState() bool {
 	return b.Box.Router().NeedWIFIState()
 }
 
-// SetAsMain starts protect server listening.
-func (b *BoxInstance) SetAsMain() {
-	b.protectCloser = serveProtect(b.protectFun)
-}
-
 func (b *BoxInstance) QueryStats(tag, direct string) int64 {
 	statsGetter := b.Router().V2RayServer().(v2rayapilite.StatsGetter)
 	if statsGetter == nil {
@@ -218,8 +268,4 @@ func (b *BoxInstance) SelectOutbound(tag string) (ok bool) {
 		return b.selector.SelectOutbound(tag)
 	}
 	return false
-}
-
-func serveProtect(protectFunc protect.Protect) io.Closer {
-	return protect.ServerProtect(ProtectPath, protectFunc)
 }
